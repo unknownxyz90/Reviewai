@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>ReviewAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      background: #F5F0FF;
+      color: #1a1a2e;
+      font-family: 'Nunito', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .wrapper {
+      width: 100%; max-width: 400px;
+      min-height: 100vh;
+      padding: 34px 24px 80px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .business-head { display: flex; flex-direction: column; align-items: center; margin-bottom: 27px; }
+    .business-logo { width: 58px; height: 58px; object-fit: contain; background: #fff; border-radius: 14px; padding: 5px; box-shadow: 0 2px 12px rgba(107,78,255,0.08); }
+    .biz-name { font-size: 16px; font-weight: 900; color: #6B4EFF; margin-top: 6px; text-align: center; }
+    .brand-tag { font-size: 10px; font-weight: 600; color: #9B8EC4; margin-top: 3px; text-align: center; }
+    .experience-wrap { width: 100%; margin-bottom: 14px; }
+    .experience-label { display: block; font-size: 12px; font-weight: 800; margin-bottom: 7px; }
+    .experience-textarea {
+      width: 100%; min-height: 62px; max-height: 120px;
+      background: #fff; border: 1px solid #EDE8FF; border-radius: 12px;
+      padding: 11px; font-size: 12px; line-height: 1.5; color: #1a1a2e;
+      font-family: 'Nunito', sans-serif; resize: vertical; outline: none;
+    }
+    .experience-textarea:focus { border-color: #6B4EFF; }
+    .experience-hint { font-size: 9px; font-weight: 600; color: #9B8EC4; margin-top: 5px; line-height: 1.4; }
+
+    .stars { display: flex; gap: 8px; margin-bottom: 5px; }
+    .star {
+      border: 0; background: transparent; padding: 0; font-size: 32px; cursor: pointer;
+      color: #DDD8F5;
+      transition: color .12s, transform .1s;
+      user-select: none; -webkit-tap-highlight-color: transparent; line-height: 1;
+    }
+    .star.active { color: #F0A500; }
+    .star:active { transform: scale(0.88); }
+    .star:disabled { cursor: wait; }
+    .star-hint { font-size: 10px; font-weight: 700; color: #9B8EC4; margin-bottom: 15px; min-height: 14px; text-align: center; }
+
+    .ai-thinking { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .dots { display: flex; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #6B4EFF; animation: bounce 1.2s infinite ease-in-out; }
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce { 0%,80%,100% { transform:scale(0.6); opacity:.4; } 40% { transform:scale(1); opacity:1; } }
+    .thinking-text { font-size: 13px; font-weight: 700; color: #6B4EFF; }
+
+    .cards-wrap { width: 100%; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; animation: fadeUp .25s ease; }
+    .draft-title { font-size: 10px; font-weight: 700; color: #645b7a; }
+    .cards-scroll {
+      display: flex; gap: 12px;
+      overflow-x: auto; padding: 2px 0 6px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cards-scroll::-webkit-scrollbar { height: 0; }
+    .draft-count { font-size: 9px; text-align: center; color: #9B8EC4; }
+    .review-card {
+      min-width: 205px; max-width: 205px; min-height: 78px; flex-shrink: 0; scroll-snap-align: start;
+      background: #fff; border: 1px solid #EDE8FF; border-radius: 13px;
+      padding: 11px; font-size: 11px; line-height: 1.5; font-weight: 700;
+      color: #1a1a2e; cursor: pointer;
+      transition: border-color .12s, transform .1s;
+      box-shadow: 0 2px 12px rgba(107,78,255,0.06);
+    }
+    .review-card:active { transform: scale(0.97); }
+    .review-card.selected { border: 2px solid #8067FF; background: #FCFAFF; }
+    .review-card:disabled { cursor: default; }
+    .card-tap { display: block; margin-top: 6px; font-size: 9px; font-weight: 800; color: #6B4EFF; }
+
+    .textarea-wrap { width: 100%; margin-bottom: 14px; }
+    .review-textarea {
+      width: 100%; min-height: 66px;
+      background: #fff; border: 1px solid #EDE8FF; border-radius: 12px;
+      padding: 11px; font-size: 11px; line-height: 1.5; font-weight: 600;
+      color: #1a1a2e; font-family: 'Nunito', sans-serif;
+      resize: none; outline: none; transition: border-color .15s;
+      box-shadow: 0 2px 12px rgba(107,78,255,0.06);
+    }
+    .review-textarea:focus { border-color: #6B4EFF; }
+    .review-textarea:read-only { background: #FDFCFF; }
+
+    .submit-btn {
+      width: 100%; padding: 12px; background: #6B4EFF; border: none;
+      border-radius: 12px; font-size: 12px; font-weight: 900; color: #fff;
+      cursor: pointer; letter-spacing: 0.2px;
+      box-shadow: 0 4px 20px rgba(107,78,255,0.3);
+      transition: opacity .15s, transform .1s; margin-bottom: 10px;
+    }
+    .submit-btn:active { transform: scale(0.97); opacity: 0.9; }
+    .submit-btn:disabled { cursor: not-allowed; opacity: .55; }
+
+    .platform-sheet {
+      width: 100%; background: #fff; border-radius: 14px;
+      border: 1px solid #EDE8FF; padding: 12px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 4px 24px rgba(107,78,255,0.08);
+      animation: slideUp .25s ease;
+    }
+    .platform-title { font-size: 11px; font-weight: 900; }
+    .platform-sub   { font-size: 9px; color: #9B8EC4; font-weight: 700; margin-top: -9px; }
+    .platform-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .platform-btn {
+      background: #F5F0FF; border: 1px solid #EDE8FF; border-radius: 10px;
+      padding: 9px 5px; display: flex; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer; font-size: 10px; font-weight: 800; color: #1a1a2e; text-decoration: none;
+      font-family: 'Nunito', sans-serif; transition: border-color .12s, opacity .12s;
+    }
+    .platform-btn:hover { border-color: #6B4EFF; }
+    .platform-btn:active { transform: scale(0.96); }
+    .platform-btn.selected { border: 2px solid #6B4EFF; background: #EDE8FF; color: #6B4EFF; }
+    .platform-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; pointer-events: none; }
+    .picon { font-size: 13px; }
+    .new-review-btn { width: 100%; border: 0; background: transparent; color: #6B4EFF; font: 800 10px 'Nunito', sans-serif; cursor: pointer; padding: 3px; }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(70px);
+      background: #2DB87A; color: #fff; padding: 12px 24px;
+      border-radius: 40px; font-size: 13px; font-weight: 800;
+      white-space: nowrap; opacity: 0; pointer-events: none; z-index: 100;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    .error-msg {
+      font-size: 13px; font-weight: 700; color: #E8622A;
+      text-align: center; margin-bottom: 12px;
+    }
+
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="business-head">
+    <img class="business-logo" id="bizLogo" src="465615789_848662040684569_2552862254939855198_n.jpg" alt="Cafe TFC & Restro logo"/>
+    <div class="biz-name" id="bizName">Cafe TFC &amp; Restro</div>
+    <div class="brand-tag">Food · Coffee · Good Vibes</div>
+  </div>
+
+  <div class="experience-wrap">
+    <label class="experience-label" for="experienceText">What stood out during your visit?</label>
+    <textarea class="experience-textarea" id="experienceText" maxlength="500" placeholder="Food, staff, or anything you remember…"></textarea>
+    <div class="experience-hint">AI drafts from your notes. Edit anything that doesn't match your visit.</div>
+  </div>
+
+  <div class="stars" id="stars">
+    <button class="star" type="button" data-val="1" aria-label="1 star">★</button>
+    <button class="star" type="button" data-val="2" aria-label="2 stars">★</button>
+    <button class="star" type="button" data-val="3" aria-label="3 stars">★</button>
+    <button class="star" type="button" data-val="4" aria-label="4 stars">★</button>
+    <button class="star" type="button" data-val="5" aria-label="5 stars">★</button>
+  </div>
+  <div class="star-hint" id="starHint">Choose a rating</div>
+
+  <div class="ai-thinking hidden" id="aiThinking">
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="thinking-text">ReviewAI is thinking…</div>
+  </div>
+
+  <div class="error-msg hidden" id="errorMsg">Something went wrong. Please try again.</div>
+
+  <div class="cards-wrap hidden" id="cardsWrap">
+    <div class="draft-title">Choose a draft and edit it to match your visit.</div>
+    <div class="cards-scroll" id="cardsScroll"></div>
+    <div class="draft-count" id="draftCount"></div>
+  </div>
+
+  <div class="textarea-wrap hidden" id="textareaWrap">
+    <textarea class="review-textarea" id="reviewText" placeholder="Tap a review above or write your own…"></textarea>
+  </div>
+
+  <button class="submit-btn hidden" id="submitBtn" onclick="handleSubmit()">Copy &amp; Submit →</button>
+
+  <div class="platform-sheet hidden" id="platformSheet">
+    <div class="platform-title">Where to post?</div>
+    <div class="platform-sub">Choose one platform · review copied</div>
+    <div class="platform-grid" id="platformGrid"></div>
+    <button class="new-review-btn hidden" id="newReviewBtn" type="button" onclick="startNewReview()">Start another review</button>
+  </div>
+
+</div>
+<div class="toast" id="toast">✅ Copied! Paste &amp; submit</div>
+
+<script>
+  // ─── Config ───────────────────────────────────────────────
+  // Production me apna backend URL daalo
+  const API_BASE = "http://localhost:8000";
+
+  const BUSINESS = {
+    name: "Cafe TFC & Restro",
+    location: "Rajpur, Barwani, MP",
+    type: "Cafe & Restaurant",
+    platforms: {
+      google: "https://search.google.com/local/writereview?placeid=ChIJV1BbUQcHYjkRXxOS0ivv70Q",
+      justdial: "https://www.justdial.com/Barwani/Cafe-Tfc-Restro-Rajpur/9999P7290-7290-241028204040-A4Q9_BZDET",
+      instagram: "https://www.instagram.com/cafe_tfc_and_restro/"
+    }
+  };
+
+  const STAR_HINTS = ["", "Very poor", "Needs work", "Average", "Good", "Excellent"];
+
+  const platformGrid = document.getElementById("platformGrid");
+  const experienceText = document.getElementById("experienceText");
+  const reviewText = document.getElementById("reviewText");
+  const errorMsg = document.getElementById("errorMsg");
+  const starHint = document.getElementById("starHint");
+  const starEls = document.querySelectorAll(".star");
+  const toast = document.getElementById("toast");
+  const newReviewBtn = document.getElementById("newReviewBtn");
+
+  let rating = 0;
+  let selectedPlatform = null;
+  let platformLocked = false;
+  let isRequestInFlight = false;
+
+  document.getElementById("bizName").textContent = BUSINESS.name;
+
+  const PLATFORM_ICONS = { google: "🔍", justdial: "📞", instagram: "📸" };
+  const PLATFORM_LABELS = { google: "Google", justdial: "Justdial", instagram: "Instagram" };
+
+  Object.keys(BUSINESS.platforms).forEach(key => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "platform-btn";
+    btn.innerHTML = `<span class="picon">${PLATFORM_ICONS[key]}</span>${PLATFORM_LABELS[key]}`;
+    btn.dataset.platform = key;
+    btn.setAttribute("aria-disabled", "false");
+    btn.addEventListener("click", () => openPlatform(key));
+    platformGrid.appendChild(btn);
+  });
+
+  function highlight(v) {
+    starEls.forEach((star) => {
+      star.classList.toggle("active", Number(star.dataset.val) <= v);
+    });
+  }
+
+  function showError(message) {
+    errorMsg.textContent = message;
+    show("errorMsg");
+  }
+
+  function hideError() {
+    hide("errorMsg");
+  }
+
+  function updatePlatformState() {
+    const buttons = [...platformGrid.querySelectorAll(".platform-btn")];
+    buttons.forEach((btn) => {
+      const key = btn.dataset.platform;
+      const isSelected = selectedPlatform === key;
+      btn.classList.toggle("selected", isSelected);
+      btn.setAttribute("aria-disabled", platformLocked && !isSelected ? "true" : "false");
+      if (platformLocked && !isSelected) {
+        btn.disabled = true;
+      } else {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function showToast(message = "✅ Copied! Paste & submit") {
+    toast.textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+
+  function validateExperience() {
+    if (!experienceText.value.trim()) {
+      showError("Please tell us what stood out during your visit before rating.");
+      experienceText.focus();
+      return false;
+    }
+    return true;
+  }
+
+  starEls.forEach((star) => {
+    star.addEventListener("mouseenter", () => highlight(Number(star.dataset.val)));
+    star.addEventListener("click", () => {
+      if (!validateExperience()) return;
+      rating = Number(star.dataset.val);
+      highlight(rating);
+      starHint.textContent = STAR_HINTS[rating];
+      generateReviews();
+    });
+  });
+
+  document.getElementById("stars").addEventListener("mouseleave", () => highlight(rating));
+
+  async function generateReviews() {
+    if (!validateExperience()) return;
+    if (isRequestInFlight) return;
+
+    isRequestInFlight = true;
+    hideError();
+    hide("cardsWrap");
+    hide("textareaWrap");
+    hide("submitBtn");
+    hide("platformSheet");
+    reviewText.value = "";
+    show("aiThinking");
+
+    try {
+      const res = await fetch(`${API_BASE}/generate-reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          business_name: BUSINESS.name,
+          location: BUSINESS.location,
+          business_type: BUSINESS.type,
+          experience: experienceText.value.trim(),
+          rating,
+          count: 30,
+          language: "english"
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || `Request failed (HTTP ${res.status})`);
+      }
+
+      if (!data.reviews || !Array.isArray(data.reviews) || data.reviews.length === 0) {
+        throw new Error("No review drafts were returned.");
+      }
+
+      hide("aiThinking");
+      renderCards(data.reviews);
+      show("textareaWrap");
+      show("submitBtn");
+    } catch (err) {
+      hide("aiThinking");
+      const msg = err instanceof Error ? err.message : "Unable to generate reviews right now.";
+      showError(`Could not create reviews: ${msg}`);
+      console.error("Review generation failed:", err);
+    } finally {
+      isRequestInFlight = false;
+    }
+  }
+
+  function renderCards(reviews) {
+    const scroll = document.getElementById("cardsScroll");
+    scroll.innerHTML = "";
+
+    reviews.forEach((text) => {
+      const card = document.createElement("div");
+      card.className = "review-card";
+      card.innerHTML = `"${text}"<span class="card-tap">Use this →</span>`;
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".review-card").forEach((item) => item.classList.remove("selected"));
+        card.classList.add("selected");
+        reviewText.value = text;
+      });
+      scroll.appendChild(card);
+    });
+
+    document.getElementById("draftCount").textContent = `${reviews.length} draft options`;
+    show("cardsWrap");
+  }
+
+  function handleSubmit() {
+    const text = reviewText.value.trim();
+    if (!text) {
+      showError("Choose or edit a review draft before copying it.");
+      reviewText.focus();
+      return;
+    }
+
+    hideError();
+    copyText(text);
+    showToast("✅ Copied! Pick the platform to post on.");
+    platformLocked = false;
+    selectedPlatform = null;
+    updatePlatformState();
+    show("platformSheet");
+    newReviewBtn.classList.remove("hidden");
+    setTimeout(() => document.getElementById("platformSheet").scrollIntoView({ behavior: "smooth", block: "nearest" }), 120);
+  }
+
+  function openPlatform(key) {
+    if (platformLocked && selectedPlatform !== key) return;
+
+    const text = reviewText.value.trim();
+    if (!text) {
+      showError("Copy a review draft before selecting a platform.");
+      return;
+    }
+
+    selectedPlatform = key;
+    platformLocked = true;
+    updatePlatformState();
+    copyText(text);
+    showToast(`✅ Opening ${PLATFORM_LABELS[key]}…`);
+    newReviewBtn.classList.remove("hidden");
+    setTimeout(() => {
+      window.open(BUSINESS.platforms[key], "_blank", "noopener,noreferrer");
+    }, 350);
+  }
+
+  function startNewReview() {
+    rating = 0;
+    selectedPlatform = null;
+    platformLocked = false;
+    isRequestInFlight = false;
+    experienceText.value = "";
+    reviewText.value = "";
+    starHint.textContent = "Choose a rating";
+    highlight(0);
+    hide("cardsWrap");
+    hide("textareaWrap");
+    hide("submitBtn");
+    hide("platformSheet");
+    hide("aiThinking");
+    hideError();
+    updatePlatformState();
+    experienceText.focus();
+    newReviewBtn.classList.add("hidden");
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      return;
+    }
+    fallbackCopy(text);
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+
+  function show(id) {
+    document.getElementById(id).classList.remove("hidden");
+  }
+
+  function hide(id) {
+    document.getElementById(id).classList.add("hidden");
+  }
+
+  updatePlatformState();
+  newReviewBtn.addEventListener("click", startNewReview);
+  newReviewBtn.classList.remove("hidden");
+</script>
+</body>
+</html>
